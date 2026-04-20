@@ -29,6 +29,6 @@ func (server *Server) Register(pattern string, handler http.HandlerFunc) {
 }
 
 func (server *Server) Start() error {
-	log.Println("Server running on port :8080")
+	log.Printf("Server running on port %s", server.addr)
 	return http.ListenAndServe(server.addr, server.mux)
 }
