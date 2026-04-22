@@ -4,6 +4,7 @@ package game
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 )
 
 type GameState struct {
@@ -14,11 +15,34 @@ type GameState struct {
 	CurrentPlayer int               `json:"current_player"`
 }
 
-func GameStateToJSON(gameState *GameState) ([]byte, error) {
-	result, err := json.Marshal(gameState)
+var (
+	gameState *GameState
+	mutex     sync.RWMutex
+)
+
+func GameStateToJSON(gs *GameState) ([]byte, error) {
+	result, err := json.Marshal(gs)
 	if err != nil {
 		return nil, fmt.Errorf("converting game state to json: %w", err)
 	}
 
 	return result, nil
+}
+
+func SetCurrentGameState(gs *GameState) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	gameState = gs
+}
+
+func GetCurrentGameState() (*GameState, error) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+
+	if gameState == nil {
+		return nil, fmt.Errorf("game not started")
+	}
+
+	return gameState, nil
 }

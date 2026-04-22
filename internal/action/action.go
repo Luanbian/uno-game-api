@@ -51,6 +51,7 @@ func startGame() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	game.SetCurrentGameState(gameState)
 
 	result, err := game.GameStateToJSON(gameState)
 	if err != nil {
