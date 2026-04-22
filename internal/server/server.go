@@ -13,22 +13,22 @@ type Server struct {
 	addr string
 }
 
-func New(addr string) *Server {
+func StartOn(addr string) {
 	server := &Server{
 		mux:  http.NewServeMux(),
 		addr: addr,
 	}
 
-	server.Register(health.Route, health.Handler)
+	server.register(health.Route, health.Handler)
 
-	return server
+	log.Fatal(server.start())
 }
 
-func (server *Server) Register(pattern string, handler http.HandlerFunc) {
+func (server *Server) register(pattern string, handler http.HandlerFunc) {
 	server.mux.HandleFunc(pattern, handler)
 }
 
-func (server *Server) Start() error {
+func (server *Server) start() error {
 	log.Printf("Server running on port %s", server.addr)
 	return http.ListenAndServe(server.addr, server.mux)
 }
