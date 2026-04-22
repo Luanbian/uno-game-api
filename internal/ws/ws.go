@@ -3,6 +3,7 @@ package ws
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -19,16 +20,22 @@ var upgrader = websocket.Upgrader{
 func Handler(res http.ResponseWriter, req *http.Request) {
 	connection, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
+		log.Println("Connection error: ", err)
 		return
 	}
 
 	for {
 		msgtype, message, err := connection.ReadMessage()
-		if err != nil || msgtype == websocket.CloseMessage {
+		if err != nil {
+			log.Println("Message error: ", err)
+			break
+		}
+		if msgtype == websocket.CloseMessage {
 			break
 		}
 
 		if err := connection.WriteMessage(websocket.TextMessage, message); err != nil {
+			log.Println("Write message error: ", err)
 			break
 		}
 
