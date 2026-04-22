@@ -14,11 +14,11 @@ type Player struct {
 
 type Hub struct {
 	mutex   sync.Mutex
-	Players map[string]*Player
+	players map[string]*Player
 }
 
 var hub = &Hub{
-	Players: make(map[string]*Player),
+	players: make(map[string]*Player),
 }
 
 func AddNewPlayer(nickname string, conn *websocket.Conn) {
@@ -28,6 +28,6 @@ func AddNewPlayer(nickname string, conn *websocket.Conn) {
 	}
 
 	hub.mutex.Lock()
-	hub.Players[player.Nickname] = &player
+	hub.players[player.Nickname] = &player
 	hub.mutex.Unlock()
 }
