@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Luanbian/uno-game-api/internal/health"
+	"github.com/Luanbian/uno-game-api/internal/ws"
 )
 
 type Server struct {
@@ -20,6 +21,7 @@ func StartOn(addr string) {
 	}
 
 	server.register(health.Route, health.Handler)
+	server.register(ws.Route, ws.Handler)
 
 	log.Fatal(server.start())
 }
