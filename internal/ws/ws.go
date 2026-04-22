@@ -64,6 +64,9 @@ func (wsServer *WsServer) handleMessage(message []byte, connection *websocket.Co
 		log.Println("Action error: ", err)
 		return
 	}
+	if len(response) == 0 {
+		return
+	}
 
 	wsServer.WriteMessage(response)
 }
