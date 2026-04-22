@@ -2,7 +2,6 @@
 package ws
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -10,6 +9,14 @@ import (
 )
 
 const Route = "GET /ws"
+
+type WsServer struct {
+	clients map[*websocket.Conn]bool
+}
+
+var wsServer = &WsServer{
+	clients: make(map[*websocket.Conn]bool),
+}
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -24,6 +31,8 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	wsServer.clients[connection] = true
+
 	for {
 		msgtype, message, err := connection.ReadMessage()
 		if err != nil {
@@ -34,17 +43,24 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		if err := connection.WriteMessage(websocket.TextMessage, message); err != nil {
-			log.Println("Write message error: ", err)
-			break
-		}
-
-		go messageHandler(message)
+		go wsServer.handleMessage(message)
 	}
+
+	delete(wsServer.clients, connection)
 
 	_ = connection.Close()
 }
 
-func messageHandler(message []byte) {
-	fmt.Println(string(message))
+func (wsServer *WsServer) handleMessage(message []byte) {
+	log.Println("Received: ", string(message))
+	wsServer.WriteMessage(message)
+}
+
+func (wsServer *WsServer) WriteMessage(message []byte) {
+	for conn := range wsServer.clients {
+		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
+			log.Println("Write error: ", err)
+			break
+		}
+	}
 }
