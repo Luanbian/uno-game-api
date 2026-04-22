@@ -4,13 +4,16 @@ package ws
 import (
 	"log"
 	"net/http"
+	"sync"
 
+	"github.com/Luanbian/uno-game-api/internal/action"
 	"github.com/gorilla/websocket"
 )
 
 const Route = "GET /ws"
 
 type WsServer struct {
+	mutex   sync.RWMutex
 	clients map[*websocket.Conn]bool
 }
 
@@ -31,7 +34,9 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	wsServer.mutex.Lock()
 	wsServer.clients[connection] = true
+	wsServer.mutex.Unlock()
 
 	for {
 		msgtype, message, err := connection.ReadMessage()
@@ -43,24 +48,34 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		go wsServer.handleMessage(message)
+		go wsServer.handleMessage(message, connection)
 	}
 
+	wsServer.mutex.Lock()
 	delete(wsServer.clients, connection)
+	wsServer.mutex.Unlock()
 
 	_ = connection.Close()
 }
 
-func (wsServer *WsServer) handleMessage(message []byte) {
-	log.Println("Received: ", string(message))
-	wsServer.WriteMessage(message)
+func (wsServer *WsServer) handleMessage(message []byte, connection *websocket.Conn) {
+	response, err := action.Handler(message, connection)
+	if err != nil {
+		log.Println("Action error: ", err)
+		return
+	}
+
+	wsServer.WriteMessage(response)
 }
 
 func (wsServer *WsServer) WriteMessage(message []byte) {
+	wsServer.mutex.RLock()
+	defer wsServer.mutex.RUnlock()
+
 	for conn := range wsServer.clients {
 		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
 			log.Println("Write error: ", err)
-			break
+			continue
 		}
 	}
 }
