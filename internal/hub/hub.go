@@ -13,7 +13,7 @@ type Player struct {
 }
 
 type Hub struct {
-	mutex   sync.Mutex
+	mutex   sync.RWMutex
 	players map[string]*Player
 }
 
@@ -30,4 +30,17 @@ func AddNewPlayer(nickname string, conn *websocket.Conn) {
 	hub.mutex.Lock()
 	hub.players[player.Nickname] = &player
 	hub.mutex.Unlock()
+}
+
+func GetPlayers() []string {
+	hub.mutex.RLock()
+	defer hub.mutex.RUnlock()
+
+	nicknames := make([]string, 0, len(hub.players))
+
+	for _, player := range hub.players {
+		nicknames = append(nicknames, player.Nickname)
+	}
+
+	return nicknames
 }

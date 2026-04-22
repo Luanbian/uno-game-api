@@ -4,8 +4,8 @@ package action
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
+	"github.com/Luanbian/uno-game-api/internal/game"
 	"github.com/Luanbian/uno-game-api/internal/hub"
 	"github.com/gorilla/websocket"
 )
@@ -31,16 +31,31 @@ func Handler(message []byte, connection *websocket.Conn) ([]byte, error) {
 
 	err := json.Unmarshal(message, &payload)
 	if err != nil {
-		log.Println("Error to convert message in Payload: ", err)
-		return nil, err
+		return nil, fmt.Errorf("converting message to Payload: %w", err)
 	}
 
 	switch Action(payload.Action) {
 	case ActionJoin:
 		hub.AddNewPlayer(payload.Nickname, connection)
+		return []byte("Player adicionado"), nil
+	case ActionStartGame:
+		return startGame()
 	default:
 		return nil, fmt.Errorf("unknown action: %s", payload.Action)
 	}
+}
 
-	return []byte(""), nil
+func startGame() ([]byte, error) {
+	players := hub.GetPlayers()
+	gameState, err := game.StartGame(players)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := game.GameStateToJSON(gameState)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
