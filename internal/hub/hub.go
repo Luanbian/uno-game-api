@@ -2,6 +2,7 @@
 package hub
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -30,6 +31,20 @@ func AddNewPlayer(nickname string, conn *websocket.Conn) {
 	hub.mutex.Lock()
 	hub.players[player.Nickname] = &player
 	hub.mutex.Unlock()
+}
+
+func RemovePlayerByConn(conn *websocket.Conn) (string, error) {
+	hub.mutex.Lock()
+	defer hub.mutex.Unlock()
+
+	for nickname, player := range hub.players {
+		if player.Conn == conn {
+			delete(hub.players, nickname)
+			return nickname, nil
+		}
+	}
+
+	return "", fmt.Errorf("player not found")
 }
 
 func GetPlayers() []string {

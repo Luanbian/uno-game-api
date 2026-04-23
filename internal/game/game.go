@@ -77,3 +77,38 @@ func (gs *GameState) FilterForPlayer(nickname string) *GameState {
 
 	return gameState
 }
+
+func RemovePlayerFromGameState(nickname string) error {
+	gs, err := GetCurrentGameState()
+	if err != nil {
+		return fmt.Errorf("removing player from game: %w", err)
+	}
+
+	gs.mutex.Lock()
+	defer gs.mutex.Unlock()
+
+	hand, ok := gs.Hands[nickname]
+	if !ok {
+		return fmt.Errorf("player %s not found in game state", nickname)
+	}
+
+	gs.Deck.cards = append(gs.Deck.cards, hand...)
+	gs.Deck.shuffle()
+
+	delete(gs.Hands, nickname)
+	delete(gs.SaidUno, nickname)
+
+	for i, player := range gs.Players {
+		if player == nickname {
+			gs.Players = append(gs.Players[:i], gs.Players[i+1:]...)
+			if gs.CurrentPlayer == i {
+				gs.CurrentPlayer = i % len(gs.Players)
+			} else if gs.CurrentPlayer > i {
+				gs.CurrentPlayer--
+			}
+			break
+		}
+	}
+
+	return nil
+}

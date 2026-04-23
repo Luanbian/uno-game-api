@@ -43,7 +43,9 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 	wsServer.mutex.Unlock()
 
 	for {
-		msgtype, message, err := connection.ReadMessage()
+		var msgtype int
+		var message []byte
+		msgtype, message, err = connection.ReadMessage()
 		if err != nil {
 			log.Println("Message error: ", err)
 			break
@@ -56,10 +58,24 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 	}
 
 	wsServer.mutex.Lock()
-	delete(wsServer.clients, connection)
-	wsServer.mutex.Unlock()
+	defer wsServer.mutex.Unlock()
+	defer func() {
+		if err = connection.Close(); err != nil {
+			log.Println("Error closing connection:", err)
+		}
+	}()
 
-	_ = connection.Close()
+	nickname, err := hub.RemovePlayerByConn(connection)
+	if err != nil {
+		log.Println("Error removing player: ", err)
+		delete(wsServer.clients, connection)
+		return
+	}
+	err = game.RemovePlayerFromGameState(nickname)
+	if err != nil {
+		log.Println("Error removing player from game state: ", err)
+	}
+	delete(wsServer.clients, connection)
 }
 
 func (wsServer *WsServer) handleMessage(message []byte, connection *websocket.Conn) {
