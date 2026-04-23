@@ -43,20 +43,9 @@ func isYourTurn(nickname string, gs *GameState) error {
 }
 
 func isCardValid(playedCard Card, gs *GameState) error {
-	topOfPile := gs.DiscardPile[len(gs.DiscardPile)-1]
-	if playedCard.Color == None {
-		return nil
-	}
-
-	sameColor := playedCard.Color == topOfPile.Color
-	sameType := playedCard.Type == topOfPile.Type && playedCard.Type != Number
-	sameValue := playedCard.Type == Number && topOfPile.Type == Number && playedCard.Value ==
-		topOfPile.Value
-
-	if !sameColor && !sameType && !sameValue {
+	if !canPlayCard(playedCard, gs) {
 		return fmt.Errorf("invalid card")
 	}
-
 	return nil
 }
 

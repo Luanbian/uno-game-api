@@ -43,6 +43,8 @@ func Handler(message []byte, connection *websocket.Conn) ([]byte, error) {
 		return startGame()
 	case ActionPlayCard:
 		return playCard(payload.Nickname, payload.Card)
+	case ActionBuyCard:
+		return buyCard(payload.Nickname)
 	default:
 		return nil, fmt.Errorf("unknown action: %s", payload.Action)
 	}
@@ -66,6 +68,20 @@ func startGame() ([]byte, error) {
 
 func playCard(nickname string, card game.Card) ([]byte, error) {
 	gameState, err := game.PlayCard(nickname, card)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := game.GameStateToJSON(gameState)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func buyCard(nickname string) ([]byte, error) {
+	gameState, err := game.BuyCard(nickname)
 	if err != nil {
 		return nil, err
 	}
