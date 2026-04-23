@@ -44,3 +44,16 @@ func GetPlayers() []string {
 
 	return nicknames
 }
+
+func GetPlayerConnections() map[string]*websocket.Conn {
+	hub.mutex.RLock()
+	defer hub.mutex.RUnlock()
+
+	connections := make(map[string]*websocket.Conn, len(hub.players))
+
+	for nickname, player := range hub.players {
+		connections[nickname] = player.Conn
+	}
+
+	return connections
+}

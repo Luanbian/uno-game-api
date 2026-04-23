@@ -51,3 +51,29 @@ func GetCurrentGameState() (*GameState, error) {
 
 	return gameState, nil
 }
+
+func (gs *GameState) FilterForPlayer(nickname string) *GameState {
+	filteredHands := make(map[string][]Card, len(gs.Hands))
+
+	for player, hand := range gs.Hands {
+		if player == nickname {
+			filteredHands[player] = hand
+		} else {
+			filteredHands[player] = make([]Card, len(hand))
+		}
+	}
+
+	gameState := &GameState{
+		Deck:          gs.Deck,
+		Hands:         filteredHands,
+		DiscardPile:   gs.DiscardPile,
+		Players:       gs.Players,
+		CurrentPlayer: gs.CurrentPlayer,
+		LastPlayer:    gs.LastPlayer,
+		SaidUno:       gs.SaidUno,
+		Winner:        gs.Winner,
+		Direction:     gs.Direction,
+	}
+
+	return gameState
+}

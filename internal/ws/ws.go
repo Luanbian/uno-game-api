@@ -2,11 +2,15 @@
 package ws
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
 
 	"github.com/Luanbian/uno-game-api/internal/action"
+	"github.com/Luanbian/uno-game-api/internal/game"
+	"github.com/Luanbian/uno-game-api/internal/hub"
 	"github.com/gorilla/websocket"
 )
 
@@ -61,24 +65,35 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 func (wsServer *WsServer) handleMessage(message []byte, connection *websocket.Conn) {
 	response, err := action.Handler(message, connection)
 	if err != nil {
-		log.Println("Action error: ", err)
-		return
-	}
-	if len(response) == 0 {
+		errMsg, _ := json.Marshal(err.Error())
+		buffer := []byte{}
+		buffer = fmt.Appendf(buffer, `{"error":%s}`, errMsg)
+
+		if err = connection.WriteMessage(
+			websocket.TextMessage,
+			buffer,
+		); err != nil {
+			log.Println("Write error: ", err)
+		}
 		return
 	}
 
-	wsServer.WriteMessage(response)
+	if response != nil {
+		wsServer.BroadcastGameState(response)
+	}
 }
 
-func (wsServer *WsServer) WriteMessage(message []byte) {
-	wsServer.mutex.RLock()
-	defer wsServer.mutex.RUnlock()
-
-	for conn := range wsServer.clients {
-		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
-			log.Println("Write error: ", err)
+func (wsServer *WsServer) BroadcastGameState(gs *game.GameState) {
+	connections := hub.GetPlayerConnections()
+	for nickname, conn := range connections {
+		filtered := gs.FilterForPlayer(nickname)
+		result, err := game.GameStateToJSON(filtered)
+		if err != nil {
 			continue
+		}
+		err = conn.WriteMessage(websocket.TextMessage, result)
+		if err != nil {
+			log.Printf("Error broadcasting to %s: %v", nickname, err)
 		}
 	}
 }

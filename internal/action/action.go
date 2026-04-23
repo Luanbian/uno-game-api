@@ -29,7 +29,7 @@ type Payload struct {
 	SelectedColor game.Color `json:"selected_color"`
 }
 
-func Handler(message []byte, connection *websocket.Conn) ([]byte, error) {
+func Handler(message []byte, connection *websocket.Conn) (*game.GameState, error) {
 	var payload Payload
 
 	err := json.Unmarshal(message, &payload)
@@ -40,7 +40,7 @@ func Handler(message []byte, connection *websocket.Conn) ([]byte, error) {
 	switch Action(payload.Action) {
 	case ActionJoin:
 		hub.AddNewPlayer(payload.Nickname, connection)
-		return []byte("Player adicionado"), nil
+		return nil, nil
 	case ActionStartGame:
 		return startGame()
 	case ActionPlayCard:
@@ -71,7 +71,7 @@ func hasWinner() (bool, error) {
 	return false, nil
 }
 
-func startGame() ([]byte, error) {
+func startGame() (*game.GameState, error) {
 	players := hub.GetPlayers()
 
 	gameState, err := game.GetCurrentGameState()
@@ -89,15 +89,10 @@ func startGame() ([]byte, error) {
 
 	game.SetCurrentGameState(gameState)
 
-	result, err := game.GameStateToJSON(gameState)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return gameState, nil
 }
 
-func playCard(nickname string, card game.Card) ([]byte, error) {
+func playCard(nickname string, card game.Card) (*game.GameState, error) {
 	playerWin, err := hasWinner()
 	if err != nil {
 		return nil, err
@@ -111,15 +106,10 @@ func playCard(nickname string, card game.Card) ([]byte, error) {
 		return nil, err
 	}
 
-	result, err := game.GameStateToJSON(gameState)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return gameState, nil
 }
 
-func buyCard(nickname string) ([]byte, error) {
+func buyCard(nickname string) (*game.GameState, error) {
 	playerWin, err := hasWinner()
 	if err != nil {
 		return nil, err
@@ -133,15 +123,10 @@ func buyCard(nickname string) ([]byte, error) {
 		return nil, err
 	}
 
-	result, err := game.GameStateToJSON(gameState)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return gameState, nil
 }
 
-func sayUno(nickname string) ([]byte, error) {
+func sayUno(nickname string) (*game.GameState, error) {
 	playerWin, err := hasWinner()
 	if err != nil {
 		return nil, err
@@ -155,15 +140,10 @@ func sayUno(nickname string) ([]byte, error) {
 		return nil, err
 	}
 
-	result, err := game.GameStateToJSON(gameState)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return gameState, nil
 }
 
-func punishNoSayUno() ([]byte, error) {
+func punishNoSayUno() (*game.GameState, error) {
 	playerWin, err := hasWinner()
 	if err != nil {
 		return nil, err
@@ -177,15 +157,10 @@ func punishNoSayUno() ([]byte, error) {
 		return nil, err
 	}
 
-	result, err := game.GameStateToJSON(gameState)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return gameState, nil
 }
 
-func selectColor(nickname string, color game.Color) ([]byte, error) {
+func selectColor(nickname string, color game.Color) (*game.GameState, error) {
 	playerWin, err := hasWinner()
 	if err != nil {
 		return nil, err
@@ -199,10 +174,5 @@ func selectColor(nickname string, color game.Color) ([]byte, error) {
 		return nil, err
 	}
 
-	result, err := game.GameStateToJSON(gameState)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return gameState, nil
 }
