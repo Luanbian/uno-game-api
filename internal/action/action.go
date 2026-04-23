@@ -41,7 +41,12 @@ func Handler(message []byte, connection *websocket.Conn) (*game.GameState, error
 	switch Action(payload.Action) {
 	case ActionJoin:
 		hub.AddNewPlayer(payload.Nickname, connection)
-		return nil, nil
+		return &game.GameState{
+			Players:     hub.GetPlayers(),
+			Hands:       make(map[string][]game.Card),
+			DiscardPile: []game.Card{},
+			SaidUno:     make(map[string]bool),
+		}, nil
 	case ActionStartGame:
 		return startGame()
 	case ActionPlayCard:
