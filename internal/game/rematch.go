@@ -21,6 +21,7 @@ func Rematch(players []string) error {
 	currentGame.SaidUno = make(map[string]bool, len(currentGame.Players))
 	currentGame.Winner = ""
 	currentGame.Direction = 1
+	currentGame.StackedCards = 0
 
 	return nil
 }

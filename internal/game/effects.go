@@ -16,7 +16,8 @@ func ApplyCardEffect(card Card, gs *GameState) error {
 		invertDirection(gs)
 		return nil
 	case Plustwo:
-		return plusTwoNextPlayer(gs)
+		plusTwoInStack(gs)
+		return nil
 	case Plusfour:
 		return plusFourNextPlayer(gs)
 	case Joker:
@@ -34,29 +35,8 @@ func invertDirection(gs *GameState) {
 	gs.Direction *= -1
 }
 
-func plusTwoNextPlayer(gs *GameState) error {
-	nextPlayer := gs.Players[(gs.CurrentPlayer+gs.Direction+len(gs.Players))%len(gs.Players)]
-
-	for range 2 {
-		topCard, err := gs.Deck.pickUpCard()
-		if err != nil {
-			return err
-		}
-
-		err = addCardInHand(nextPlayer, topCard, gs)
-		if err != nil {
-			return err
-		}
-	}
-
-	err := resetSaidUno(nextPlayer, gs)
-	if err != nil {
-		return err
-	}
-
-	jumpNextPlayer(gs)
-
-	return nil
+func plusTwoInStack(gs *GameState) {
+	gs.StackedCards += 2
 }
 
 func plusFourNextPlayer(gs *GameState) error {
@@ -108,4 +88,41 @@ func SelectColor(nickname string, color Color) (*GameState, error) {
 	nextTurn(currentGame)
 
 	return currentGame, nil
+}
+
+func AcceptPenalty(nickname string) (*GameState, error) {
+	gs, err := GetCurrentGameState()
+	if err != nil {
+		return nil, fmt.Errorf("accepting penalty: %w", err)
+	}
+	gs.mutex.Lock()
+	defer gs.mutex.Unlock()
+
+	err = isYourTurn(nickname, gs)
+	if err != nil {
+		return nil, err
+	}
+
+	for range gs.StackedCards {
+		var topCard Card
+		topCard, err = gs.Deck.pickUpCard()
+		if err != nil {
+			return nil, err
+		}
+
+		err = addCardInHand(nickname, topCard, gs)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = resetSaidUno(nickname, gs)
+	if err != nil {
+		return nil, err
+	}
+
+	gs.StackedCards = 0
+	nextTurn(gs)
+
+	return gs, nil
 }

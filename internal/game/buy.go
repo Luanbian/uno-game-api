@@ -15,6 +15,10 @@ func BuyCard(nickname string) (*GameState, error) {
 		return nil, fmt.Errorf("waiting for color selection")
 	}
 
+	if currentGame.StackedCards > 0 {
+		return nil, fmt.Errorf("cannot buy card while penalty is stacked, use accept_penalty")
+	}
+
 	err = isYourTurn(nickname, currentGame)
 	if err != nil {
 		return nil, err
@@ -53,12 +57,19 @@ func addCardInHand(nickname string, card Card, gs *GameState) error {
 }
 
 func canPlayCard(card Card, gs *GameState) bool {
+	if gs.StackedCards > 0 {
+		return card.Type == Plustwo
+	}
+
 	if card.Color == None {
 		return true
 	}
+
 	top := gs.DiscardPile[len(gs.DiscardPile)-1]
+
 	sameColor := card.Color == top.Color
 	sameType := card.Type == top.Type && card.Type != Number
 	sameValue := card.Type == Number && top.Type == Number && card.Value == top.Value
+
 	return sameColor || sameType || sameValue
 }

@@ -20,6 +20,7 @@ const (
 	ActionSayUno         Action = "say_uno"
 	ActionPunishNoSayUno Action = "punish_no_say_uno"
 	ActionSelectColor    Action = "select_color"
+	ActionAcceptPenalty  Action = "accept_penalty"
 )
 
 type Payload struct {
@@ -53,6 +54,8 @@ func Handler(message []byte, connection *websocket.Conn) (*game.GameState, error
 		return punishNoSayUno()
 	case ActionSelectColor:
 		return selectColor(payload.Nickname, payload.SelectedColor)
+	case ActionAcceptPenalty:
+		return acceptPenalty(payload.Nickname)
 	default:
 		return nil, fmt.Errorf("unknown action: %s", payload.Action)
 	}
@@ -170,6 +173,23 @@ func selectColor(nickname string, color game.Color) (*game.GameState, error) {
 	}
 
 	gameState, err := game.SelectColor(nickname, color)
+	if err != nil {
+		return nil, err
+	}
+
+	return gameState, nil
+}
+
+func acceptPenalty(nickname string) (*game.GameState, error) {
+	playerWin, err := hasWinner()
+	if err != nil {
+		return nil, err
+	}
+	if playerWin {
+		return nil, fmt.Errorf("game already has a winner")
+	}
+
+	gameState, err := game.AcceptPenalty(nickname)
 	if err != nil {
 		return nil, err
 	}

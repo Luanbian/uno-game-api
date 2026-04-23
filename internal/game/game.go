@@ -18,6 +18,7 @@ type GameState struct {
 	SaidUno       map[string]bool   `json:"said_uno"`
 	Winner        string            `json:"winner,omitempty"`
 	Direction     int               `json:"direction"`
+	StackedCards  int               `json:"stacked_cards"`
 }
 
 var (
@@ -73,6 +74,7 @@ func (gs *GameState) FilterForPlayer(nickname string) *GameState {
 		SaidUno:       gs.SaidUno,
 		Winner:        gs.Winner,
 		Direction:     gs.Direction,
+		StackedCards:  gs.StackedCards,
 	}
 
 	return gameState

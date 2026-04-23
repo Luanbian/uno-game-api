@@ -43,6 +43,7 @@ func StartGame(players []string) (*GameState, error) {
 		SaidUno:       saidUno,
 		Winner:        "",
 		Direction:     1,
+		StackedCards:  0,
 	}
 
 	return gameState, nil
