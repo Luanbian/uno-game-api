@@ -36,6 +36,11 @@ func PlayCard(nickname string, card Card) (*GameState, error) {
 		return currentGame, nil
 	}
 
+	err = ApplyCardEffect(card, currentGame)
+	if err != nil {
+		return nil, err
+	}
+
 	nextTurn(currentGame)
 
 	return currentGame, nil
@@ -88,7 +93,7 @@ func addCardInTopOfPile(card Card, gs *GameState) {
 
 func nextTurn(gs *GameState) {
 	currentPlayer := gs.CurrentPlayer
-	nextPlayer := (currentPlayer + 1) % len(gs.Players)
+	nextPlayer := (currentPlayer + gs.Direction + len(gs.Players)) % len(gs.Players)
 	gs.LastPlayer = currentPlayer
 	gs.CurrentPlayer = nextPlayer
 }

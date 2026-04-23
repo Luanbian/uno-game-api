@@ -17,6 +17,7 @@ type GameState struct {
 	LastPlayer    int               `json:"last_player"`
 	SaidUno       map[string]bool   `json:"said_uno"`
 	Winner        string            `json:"winner,omitempty"`
+	Direction     int               `json:"direction"`
 }
 
 var (
