@@ -8,6 +8,7 @@ import (
 )
 
 type GameState struct {
+	mutex         sync.Mutex
 	Deck          *Deck             `json:"-"`
 	Hands         map[string][]Card `json:"hands"`
 	DiscardPile   []Card            `json:"discard_pile"`

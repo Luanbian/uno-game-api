@@ -22,8 +22,9 @@ const (
 )
 
 type Payload struct {
-	Action   string `json:"action"`
-	Nickname string `json:"nickname"`
+	Action   string    `json:"action"`
+	Nickname string    `json:"nickname"`
+	Card     game.Card `json:"card"`
 }
 
 func Handler(message []byte, connection *websocket.Conn) ([]byte, error) {
@@ -40,6 +41,8 @@ func Handler(message []byte, connection *websocket.Conn) ([]byte, error) {
 		return []byte("Player adicionado"), nil
 	case ActionStartGame:
 		return startGame()
+	case ActionPlayCard:
+		return playCard(payload.Nickname, payload.Card)
 	default:
 		return nil, fmt.Errorf("unknown action: %s", payload.Action)
 	}
@@ -52,6 +55,20 @@ func startGame() ([]byte, error) {
 		return nil, err
 	}
 	game.SetCurrentGameState(gameState)
+
+	result, err := game.GameStateToJSON(gameState)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func playCard(nickname string, card game.Card) ([]byte, error) {
+	gameState, err := game.PlayCard(nickname, card)
+	if err != nil {
+		return nil, err
+	}
 
 	result, err := game.GameStateToJSON(gameState)
 	if err != nil {
