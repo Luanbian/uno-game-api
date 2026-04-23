@@ -28,6 +28,14 @@ func PlayCard(nickname string, card Card) (*GameState, error) {
 
 	addCardInTopOfPile(card, currentGame)
 
+	hasWinner, err := playerWin(nickname, currentGame)
+	if err != nil {
+		return nil, err
+	}
+	if hasWinner {
+		return currentGame, nil
+	}
+
 	nextTurn(currentGame)
 
 	return currentGame, nil
@@ -83,4 +91,18 @@ func nextTurn(gs *GameState) {
 	nextPlayer := (currentPlayer + 1) % len(gs.Players)
 	gs.LastPlayer = currentPlayer
 	gs.CurrentPlayer = nextPlayer
+}
+
+func playerWin(nickname string, gs *GameState) (bool, error) {
+	hand, ok := gs.Hands[nickname]
+	if !ok {
+		return false, fmt.Errorf("checking win for non existing hand: %s", nickname)
+	}
+
+	if len(hand) == 0 {
+		gs.Winner = nickname
+		return true, nil
+	}
+
+	return false, nil
 }

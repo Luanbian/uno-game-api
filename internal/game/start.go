@@ -31,6 +31,7 @@ func StartGame(players []string) (*GameState, error) {
 		CurrentPlayer: 0,
 		LastPlayer:    -1,
 		SaidUno:       saidUno,
+		Winner:        "",
 	}
 
 	return gameState, nil

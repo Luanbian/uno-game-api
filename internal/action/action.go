@@ -54,6 +54,19 @@ func Handler(message []byte, connection *websocket.Conn) ([]byte, error) {
 	}
 }
 
+func hasWinner() (bool, error) {
+	gameState, err := game.GetCurrentGameState()
+	if err != nil {
+		return false, fmt.Errorf("getting current game state: %w", err)
+	}
+
+	if gameState.Winner != "" {
+		return true, nil
+	}
+
+	return false, nil
+}
+
 func startGame() ([]byte, error) {
 	players := hub.GetPlayers()
 	gameState, err := game.StartGame(players)
@@ -71,6 +84,14 @@ func startGame() ([]byte, error) {
 }
 
 func playCard(nickname string, card game.Card) ([]byte, error) {
+	playerWin, err := hasWinner()
+	if err != nil {
+		return nil, err
+	}
+	if playerWin {
+		return nil, fmt.Errorf("game already has a winner")
+	}
+
 	gameState, err := game.PlayCard(nickname, card)
 	if err != nil {
 		return nil, err
@@ -85,6 +106,14 @@ func playCard(nickname string, card game.Card) ([]byte, error) {
 }
 
 func buyCard(nickname string) ([]byte, error) {
+	playerWin, err := hasWinner()
+	if err != nil {
+		return nil, err
+	}
+	if playerWin {
+		return nil, fmt.Errorf("game already has a winner")
+	}
+
 	gameState, err := game.BuyCard(nickname)
 	if err != nil {
 		return nil, err
@@ -99,6 +128,14 @@ func buyCard(nickname string) ([]byte, error) {
 }
 
 func sayUno(nickname string) ([]byte, error) {
+	playerWin, err := hasWinner()
+	if err != nil {
+		return nil, err
+	}
+	if playerWin {
+		return nil, fmt.Errorf("game already has a winner")
+	}
+
 	gameState, err := game.SayUno(nickname)
 	if err != nil {
 		return nil, err
@@ -113,6 +150,14 @@ func sayUno(nickname string) ([]byte, error) {
 }
 
 func punishNoSayUno() ([]byte, error) {
+	playerWin, err := hasWinner()
+	if err != nil {
+		return nil, err
+	}
+	if playerWin {
+		return nil, fmt.Errorf("game already has a winner")
+	}
+
 	gameState, err := game.PunishNoSayUno()
 	if err != nil {
 		return nil, err
