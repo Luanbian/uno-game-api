@@ -24,7 +24,7 @@ const (
 )
 
 type Card struct {
-	Color Color
-	Type  Type
-	Value int // 0-9 para Number, -1 para especiais
+	Color Color `json:"color"`
+	Type  Type  `json:"type"`
+	Value int   `json:"value"`
 }
