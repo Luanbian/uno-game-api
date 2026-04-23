@@ -19,12 +19,14 @@ const (
 	ActionBuyCard        Action = "buy_card"
 	ActionSayUno         Action = "say_uno"
 	ActionPunishNoSayUno Action = "punish_no_say_uno"
+	ActionSelectColor    Action = "select_color"
 )
 
 type Payload struct {
-	Action   string    `json:"action"`
-	Nickname string    `json:"nickname"`
-	Card     game.Card `json:"card"`
+	Action        string     `json:"action"`
+	Nickname      string     `json:"nickname"`
+	Card          game.Card  `json:"card"`
+	SelectedColor game.Color `json:"selected_color"`
 }
 
 func Handler(message []byte, connection *websocket.Conn) ([]byte, error) {
@@ -49,6 +51,8 @@ func Handler(message []byte, connection *websocket.Conn) ([]byte, error) {
 		return sayUno(payload.Nickname)
 	case ActionPunishNoSayUno:
 		return punishNoSayUno()
+	case ActionSelectColor:
+		return selectColor(payload.Nickname, payload.SelectedColor)
 	default:
 		return nil, fmt.Errorf("unknown action: %s", payload.Action)
 	}
@@ -169,6 +173,28 @@ func punishNoSayUno() ([]byte, error) {
 	}
 
 	gameState, err := game.PunishNoSayUno()
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := game.GameStateToJSON(gameState)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func selectColor(nickname string, color game.Color) ([]byte, error) {
+	playerWin, err := hasWinner()
+	if err != nil {
+		return nil, err
+	}
+	if playerWin {
+		return nil, fmt.Errorf("game already has a winner")
+	}
+
+	gameState, err := game.SelectColor(nickname, color)
 	if err != nil {
 		return nil, err
 	}

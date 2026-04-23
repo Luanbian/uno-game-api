@@ -11,6 +11,10 @@ func BuyCard(nickname string) (*GameState, error) {
 	currentGame.mutex.Lock()
 	defer currentGame.mutex.Unlock()
 
+	if isColorSelectPending(currentGame) {
+		return nil, fmt.Errorf("waiting for color selection")
+	}
+
 	err = isYourTurn(nickname, currentGame)
 	if err != nil {
 		return nil, err

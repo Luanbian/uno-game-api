@@ -11,6 +11,10 @@ func PlayCard(nickname string, card Card) (*GameState, error) {
 	currentGame.mutex.Lock()
 	defer currentGame.mutex.Unlock()
 
+	if isColorSelectPending(currentGame) {
+		return nil, fmt.Errorf("waiting for color selection")
+	}
+
 	err = isYourTurn(nickname, currentGame)
 	if err != nil {
 		return nil, err
@@ -36,9 +40,16 @@ func PlayCard(nickname string, card Card) (*GameState, error) {
 		return currentGame, nil
 	}
 
+	playerIndex := currentGame.CurrentPlayer
+
 	err = ApplyCardEffect(card, currentGame)
 	if err != nil {
 		return nil, err
+	}
+
+	if card.Color == None {
+		currentGame.LastPlayer = playerIndex
+		return currentGame, nil
 	}
 
 	nextTurn(currentGame)
@@ -110,4 +121,9 @@ func playerWin(nickname string, gs *GameState) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func isColorSelectPending(gs *GameState) bool {
+	top := gs.DiscardPile[len(gs.DiscardPile)-1]
+	return top.Color == None
 }

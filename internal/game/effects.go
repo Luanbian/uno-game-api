@@ -19,6 +19,8 @@ func ApplyCardEffect(card Card, gs *GameState) error {
 		return plusTwoNextPlayer(gs)
 	case Plusfour:
 		return plusFourNextPlayer(gs)
+	case Joker:
+		return nil
 	default:
 		return fmt.Errorf("card type %s not implemented yet", card.Type)
 	}
@@ -80,4 +82,30 @@ func plusFourNextPlayer(gs *GameState) error {
 	jumpNextPlayer(gs)
 
 	return nil
+}
+
+func SelectColor(nickname string, color Color) (*GameState, error) {
+	validColors := map[Color]bool{Red: true, Green: true, Blue: true, Yellow: true}
+	if !validColors[color] {
+		return nil, fmt.Errorf("invalid color: %s", color)
+	}
+
+	currentGame, err := GetCurrentGameState()
+	if err != nil {
+		return nil, fmt.Errorf("selecting color: %w: ", err)
+	}
+	currentGame.mutex.Lock()
+	defer currentGame.mutex.Unlock()
+
+	if !isColorSelectPending(currentGame) {
+		return nil, fmt.Errorf("no color selection pending")
+	}
+	if nickname != currentGame.Players[currentGame.LastPlayer] {
+		return nil, fmt.Errorf("only player %s can select color", currentGame.Players[currentGame.LastPlayer])
+	}
+
+	currentGame.DiscardPile = append(currentGame.DiscardPile, Card{Color: color, Type: ColorSelect, Value: -1})
+	nextTurn(currentGame)
+
+	return currentGame, nil
 }

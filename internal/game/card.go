@@ -19,6 +19,8 @@ const (
 	Plustwo  Type = "plusTwo"
 	Plusfour Type = "plusFour"
 	Joker    Type = "joker"
+
+	ColorSelect Type = "colorSelect"
 )
 
 type Card struct {

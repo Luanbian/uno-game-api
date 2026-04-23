@@ -16,9 +16,19 @@ func StartGame(players []string) (*GameState, error) {
 		return nil, err
 	}
 
-	firstCard, err := deck.pickUpCard()
-	if err != nil {
-		return nil, err
+	var firstCard Card
+	for {
+		firstCard, err = deck.pickUpCard()
+		if err != nil {
+			return nil, err
+		}
+
+		if firstCard.Type == Number {
+			break
+		}
+
+		deck.cards = append(deck.cards, firstCard)
+		deck.shuffle()
 	}
 
 	discardPile := []Card{firstCard}
