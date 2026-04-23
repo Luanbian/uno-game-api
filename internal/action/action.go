@@ -69,10 +69,20 @@ func hasWinner() (bool, error) {
 
 func startGame() ([]byte, error) {
 	players := hub.GetPlayers()
-	gameState, err := game.StartGame(players)
+
+	gameState, err := game.GetCurrentGameState()
+	if gameState != nil && err == nil {
+		err = game.Rematch(players)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	gameState, err = game.StartGame(players)
 	if err != nil {
 		return nil, err
 	}
+
 	game.SetCurrentGameState(gameState)
 
 	result, err := game.GameStateToJSON(gameState)
