@@ -3,9 +3,11 @@ package game
 
 func StartGame(players []string) (*GameState, error) {
 	hands := make(map[string][]Card, len(players))
+	saidUno := make(map[string]bool, len(players))
 
 	for _, nickname := range players {
 		hands[nickname] = make([]Card, 0, 7)
+		saidUno[nickname] = false
 	}
 
 	deck := NewDeck()
@@ -27,6 +29,8 @@ func StartGame(players []string) (*GameState, error) {
 		DiscardPile:   discardPile,
 		Players:       players,
 		CurrentPlayer: 0,
+		LastPlayer:    -1,
+		SaidUno:       saidUno,
 	}
 
 	return gameState, nil

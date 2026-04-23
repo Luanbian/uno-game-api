@@ -81,6 +81,6 @@ func addCardInTopOfPile(card Card, gs *GameState) {
 func nextTurn(gs *GameState) {
 	currentPlayer := gs.CurrentPlayer
 	nextPlayer := (currentPlayer + 1) % len(gs.Players)
-
+	gs.LastPlayer = currentPlayer
 	gs.CurrentPlayer = nextPlayer
 }

@@ -26,6 +26,11 @@ func BuyCard(nickname string) (*GameState, error) {
 		return nil, err
 	}
 
+	err = resetSaidUno(nickname, currentGame)
+	if err != nil {
+		return nil, err
+	}
+
 	if !canPlayCard(topCard, currentGame) {
 		nextTurn(currentGame)
 	}

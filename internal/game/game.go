@@ -14,6 +14,8 @@ type GameState struct {
 	DiscardPile   []Card            `json:"discard_pile"`
 	Players       []string          `json:"players"`
 	CurrentPlayer int               `json:"current_player"`
+	LastPlayer    int               `json:"last_player"`
+	SaidUno       map[string]bool   `json:"said_uno"`
 }
 
 var (

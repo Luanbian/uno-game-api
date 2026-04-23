@@ -56,7 +56,16 @@ func (deck *Deck) shuffle() {
 
 func (deck *Deck) pickUpCard() (Card, error) {
 	if len(deck.cards) == 0 {
-		return Card{}, fmt.Errorf("deck is empty")
+		err := deck.turnDiscardIntoDeck()
+		if err != nil {
+			return Card{}, fmt.Errorf("picking up card: %w: ", err)
+		}
+
+		first, err := deck.pickUpCard()
+		if err != nil {
+			return Card{}, fmt.Errorf("picking up card: %w: ", err)
+		}
+		return first, nil
 	}
 
 	first := deck.cards[0]
@@ -77,6 +86,29 @@ func (deck *Deck) distribute(hands map[string][]Card) error {
 		deck.cards = deck.cards[7:]
 		hands[nickname] = append(hands[nickname], currentHand...)
 	}
+
+	return nil
+}
+
+func (deck *Deck) turnDiscardIntoDeck() error {
+	currentGame, err := GetCurrentGameState()
+	if err != nil {
+		return fmt.Errorf("turning discard into deck: %w: ", err)
+	}
+
+	if len(deck.cards) != 0 {
+		return fmt.Errorf("deck is not empty")
+	}
+	if len(currentGame.DiscardPile) <= 1 {
+		return fmt.Errorf("not enough cards in discard pile to turn into deck")
+	}
+
+	topCard := currentGame.DiscardPile[len(currentGame.DiscardPile)-1]
+
+	deck.cards = append(deck.cards, currentGame.DiscardPile[:len(currentGame.DiscardPile)-1]...)
+	deck.shuffle()
+
+	currentGame.DiscardPile = []Card{topCard}
 
 	return nil
 }
